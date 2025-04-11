@@ -1,0 +1,23 @@
+spring:
+  name: online-library
+  main:
+    banner-mode: 'off'
+    log-startup-info: false
+  application:
+    jpa:
+      properties:
+        hibernate:
+          generate_statistics: true
+
+jakarta:
+  persistence:
+    jdbc:
+      url: jdbc:postgresql://localhost:5432/library
+      password: 123
+      user: postgres
+
+hibernate:
+  show_sql: true
+  format_sql: true
+  highlight_sql: true
+
