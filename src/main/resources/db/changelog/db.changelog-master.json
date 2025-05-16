@@ -1,0 +1,18 @@
+{
+  "databaseChangeLog": [
+    {
+      "comment": "Initial table creations",
+      "include": {
+        "file": "changes/001-create-tables.xml",
+        "relativeToChangelogFile": "true"
+      }
+    },
+    {
+      "comment": "Initial data insertions",
+      "include": {
+        "file": "changes/001-insert-data.sql",
+        "relativeToChangelogFile": "true"
+      }
+    }
+  ]
+}

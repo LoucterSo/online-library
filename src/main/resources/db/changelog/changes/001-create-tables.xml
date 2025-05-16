@@ -1,0 +1,284 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="1" author="loucterso">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="author"/>
+            </not>
+        </preConditions>
+        <createTable tableName="author">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="birth_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="country" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="biography" type="TEXT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2" author="loucterso">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="genre"/>
+            </not>
+        </preConditions>
+        <createTable tableName="genre">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3" author="loucterso">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="users"/>
+            </not>
+        </preConditions>
+        <createTable tableName="users">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="registration_time" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="4" author="loucterso">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="book"/>
+            </not>
+        </preConditions>
+        <createTable tableName="book">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="isbn" type="VARCHAR(20)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="author_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_book_author"
+                             referencedTableName="author" referencedColumnNames="id"/>
+            </column>
+            <column name="average_rating" type="NUMERIC(3, 2)" defaultValue="0.0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="issued_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="published_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="4.1" author="loucterso">
+        <addColumn tableName="book">
+            <column name="borrowed" type="BOOLEAN"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="4.2" author="loucterso">
+        <update tableName="book">
+            <column name="borrowed" valueBoolean="false"/>
+        </update>
+    </changeSet>
+
+    <changeSet id="4.3" author="loucterso">
+        <addDefaultValue tableName="book" columnName="borrowed" defaultValue="false"/>
+    </changeSet>
+
+    <changeSet id="4.4" author="loucterso">
+        <sql>
+            UPDATE book
+            SET borrowed = TRUE
+            WHERE id IN (
+            SELECT book_id FROM borrowing WHERE return_date IS NULL
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="4.5" author="loucterso">
+        <addNotNullConstraint
+                tableName="book"
+                columnName="borrowed"
+                columnDataType="BOOLEAN"/>
+    </changeSet>
+
+    <changeSet id="5" author="loucterso">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="books_genres"/>
+            </not>
+        </preConditions>
+        <createTable tableName="books_genres">
+            <column name="book_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_bg_book"
+                             referencedTableName="book" referencedColumnNames="id"/>
+            </column>
+            <column name="genre_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_bg_genre"
+                             referencedTableName="genre" referencedColumnNames="id"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="6" author="loucterso">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <primaryKeyExists tableName="books_genres" primaryKeyName="pk_books_genres"/>
+            </not>
+        </preConditions>
+
+        <addPrimaryKey
+                tableName="books_genres"
+                columnNames="book_id, genre_id"
+                constraintName="pk_books_genres"/>
+    </changeSet>
+
+    <changeSet id="7" author="loucterso">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="borrowing"/>
+            </not>
+        </preConditions>
+        <createTable tableName="borrowing">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_borrowing_user"
+                             referencedTableName="users" referencedColumnNames="id"/>
+            </column>
+            <column name="book_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_borrowing_book"
+                             referencedTableName="book" referencedColumnNames="id"/>
+            </column>
+            <column name="loan_date" type="DATE" defaultValueComputed="CURRENT_DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="return_date" type="DATE">
+                <constraints checkConstraint="return_date IS NULL OR return_date >= loan_date"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="7.1" author="loucterso">
+        <sql>
+            CREATE OR REPLACE FUNCTION update_book_borrowed_flag()
+            RETURNS TRIGGER AS '
+            BEGIN
+                IF (TG_OP = ''INSERT'') THEN
+                    UPDATE book SET borrowed = TRUE WHERE id = NEW.book_id;
+                ELSIF (TG_OP = ''UPDATE'') THEN
+                    IF NEW.return_date IS NOT NULL THEN
+                        UPDATE book SET borrowed = FALSE WHERE id = NEW.book_id;
+                    ELSIF OLD.return_date IS NOT NULL AND NEW.return_date IS NULL THEN
+                        UPDATE book SET is_borrowed = TRUE WHERE id = NEW.book_id;
+                    END IF;
+                END IF;
+                RETURN NULL;
+            END;
+            ' LANGUAGE PLPGSQL;
+
+            CREATE TRIGGER trg_update_book_borrowed_flag
+            AFTER INSERT OR UPDATE OR DELETE ON borrowing
+            FOR EACH ROW EXECUTE FUNCTION update_book_borrowed_flag();
+        </sql>
+    </changeSet>
+
+    <changeSet id="8" author="loucterso">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="review"/>
+            </not>
+        </preConditions>
+        <createTable tableName="review">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="rating" type="INTEGER">
+                <constraints nullable="false" checkConstraint="rating BETWEEN 1 AND 5"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_review_user"
+                             referencedTableName="users" referencedColumnNames="id"/>
+            </column>
+            <column name="book_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_review_book"
+                             referencedTableName="book" referencedColumnNames="id"/>
+            </column>
+            <column name="comment" type="TEXT"/>
+            <column name="created_time" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <sql>
+            CREATE OR REPLACE FUNCTION update_book_average_rating()
+            RETURNS TRIGGER AS '
+            BEGIN
+                UPDATE book SET average_rating = COALESCE(
+                    (SELECT ROUND(AVG(r.rating), 2)
+                    FROM review r
+                    WHERE r.book_id = COALESCE(NEW.book_id, OLD.book_id)
+                    ), 0.00
+                )
+                WHERE id = COALESCE(NEW.book_id, OLD.book_id);
+                RETURN NULL;
+            END;
+            ' LANGUAGE PLPGSQL;
+
+            CREATE TRIGGER trg_book_rating_update
+            AFTER INSERT OR UPDATE OR DELETE ON review
+            FOR EACH ROW EXECUTE FUNCTION update_book_average_rating();
+        </sql>
+    </changeSet>
+
+    <changeSet id="9" author="loucterso">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="uq_review_book_user" tableName="review"/>
+            </not>
+        </preConditions>
+        <addUniqueConstraint
+                tableName="review"
+                columnNames="book_id, user_id"
+                constraintName="uq_review_book_user"/>
+    </changeSet>
+
+    <changeSet id="10" author="loucterso">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="uq_borrowing_book_user" tableName="borrowing"/>
+            </not>
+        </preConditions>
+        <addUniqueConstraint
+                tableName="borrowing"
+                columnNames="book_id, user_id"
+                constraintName="uq_borrowing_book_user"/>
+    </changeSet>
+</databaseChangeLog>
